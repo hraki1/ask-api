@@ -16,6 +16,10 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.get("/ping", (req, res) => {
+  res.send("pong");
+});
+
 app.use(
   "/uploads/images",
   express.static(path.join(__dirname, "uploads/images"))
