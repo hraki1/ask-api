@@ -8,6 +8,9 @@ const notificationModal = new Schema(
     isRead: { type: Boolean, required: true },
     sender: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     receiver: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    entityId: {
+      type: Schema.Types.ObjectId,
+    },
     postId: {
       type: Schema.Types.ObjectId,
     },

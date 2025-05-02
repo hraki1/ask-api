@@ -291,7 +291,7 @@ const toggleLike = async (req, res, next) => {
 
       // Remove existing like notification
       await Notification.deleteOne({
-        postId,
+        entityId: postId,
         sender: userId,
         receiver: post.creator._id,
         type: "like",
@@ -303,12 +303,12 @@ const toggleLike = async (req, res, next) => {
       if (!isSelfLike) {
         const notification = new Notification({
           type: "like",
+          postId,
           sender: userId,
           receiver: post.creator._id,
           isRead: false,
-          postId,
+          entityId: postId,
         });
-
         await notification.save();
       }
     }

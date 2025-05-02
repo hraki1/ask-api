@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const Post = require("../model/post");
 const User = require("../model/user");
 const Answer = require("../model/answer");
+const Notification = require("../model/notification");
 
 const HttpError = require("../model/http-error");
 
@@ -100,13 +101,11 @@ const createAnswer = async (req, res, next) => {
     postId,
   });
 
-  // console.log(createdAnswer);
-  // console.log(postId);
-
-  let user, post;
+  let user, post, postOwner;
   try {
     user = await User.findById(creator);
-    post = await Post.findById(postId);
+    post = await Post.findById(postId).populate("creator");
+    postOwner = post.creator;
   } catch (err) {
     const error = new HttpError("Creating post fild, please try again.", 500);
     return next(error);
@@ -125,12 +124,28 @@ const createAnswer = async (req, res, next) => {
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
+
+    // Save the answer
     await createdAnswer.save({ session: session });
 
+    // Update post and user
     post.answers.push(createdAnswer);
     user.answers.push(createdAnswer);
-    await post.save();
-    await user.save();
+    await post.save({ session: session });
+    await user.save({ session: session });
+
+    // Create notification for the post owner
+    if (postOwner._id.toString() !== creator.toString()) {
+      const notification = new Notification({
+        type: "answer",
+        isRead: false,
+        sender: creator,
+        receiver: postOwner._id,
+        entityId: createdAnswer._id,
+        postId: postId,
+      });
+      await notification.save({ session: session });
+    }
 
     await session.commitTransaction();
     await session.endSession();
@@ -200,6 +215,11 @@ const deleteAnswer = async (req, res, next) => {
     );
   }
 
+  let relatedNotification = await Notification.find({
+    type: "answer",
+    entityId: answerId,
+  });
+
   if (!answer) {
     return next(new HttpError("Could not find answer for this ID.", 404));
   }
@@ -217,6 +237,15 @@ const deleteAnswer = async (req, res, next) => {
 
     await answer.postId.save({ session });
     await answer.creator.save({ session });
+    if (relatedNotification.length > 0) {
+      await Notification.deleteMany(
+        {
+          type: "answer",
+          entityId: answerId,
+        },
+        { session }
+      );
+    }
 
     await session.commitTransaction();
     session.endSession();
