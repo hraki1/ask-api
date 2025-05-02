@@ -1,0 +1,8 @@
+{
+  "env": {
+    "DB_USER": "hraki",
+    "DB_PASSWORD": "752704",
+    "DB_NAME": "ask",
+    "JWT_KEY": "supersecret_dont_share"
+  }
+}
