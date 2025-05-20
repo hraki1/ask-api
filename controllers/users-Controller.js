@@ -1,9 +1,19 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 const HttpError = require("../model/http-error");
 const User = require("../model/user");
+
+const transport = nodemailer.createTransport({
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
+  auth: {
+    user: "de31f451b43741",
+    pass: "a939640d3da765",
+  },
+});
 
 const getUsers = async (req, res, next) => {
   let users;
@@ -128,9 +138,29 @@ const signup = async (req, res, next) => {
     return next(new HttpError("Signing up fild, please try again.", 500));
   }
 
-  // return res
-  //   .status(201)
-  //   .json({ user: createdUser.toObject({ getters: true }) });
+  await transport.sendMail({
+    from: '"ASK Platform" <no-reply@Ahmad-Alhraki.com>',
+    to: email,
+    subject: "🎉 Welcome to ASK Platform!",
+    text: `Hello ${name}, welcome to ASK Platform! We're thrilled to have you on board.`,
+    html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #f9f9f9;">
+      <h2 style="color: #2c3e50;">👋 Welcome to <span style="color: #4CAF50;">ASK Platform</span>, ${name}!</h2>
+      <p style="font-size: 16px; color: #333;">
+        We're thrilled to have you join our community. ASK Platform is all about helping you learn, grow, and connect with like-minded people.
+      </p>
+      <p style="font-size: 16px; color: #333;">
+        If you ever need help, don’t hesitate to reach out. We're here for you!
+      </p>
+      <a href="https://ask.ahmad-alhraki.com" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">
+        👉 Explore the Platform
+      </a>
+      <p style="margin-top: 30px; font-size: 14px; color: #999;">
+        — The ASK Platform Team
+      </p>
+    </div>
+  `,
+  });
 
   return res
     .status(201)
