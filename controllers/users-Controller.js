@@ -7,11 +7,10 @@ const HttpError = require("../model/http-error");
 const User = require("../model/user");
 
 const transport = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 2525,
+  service: "gmail",
   auth: {
-    user: "de31f451b43741",
-    pass: "a939640d3da765",
+    user: "www.ahmedalheraki4444@gmail.com", // بريدك الحقيقي
+    pass: "avuibdpnzsgzubsf", // كلمة مرور التطبيق
   },
 });
 
@@ -121,7 +120,10 @@ const signup = async (req, res, next) => {
     await createdUser.save();
   } catch (err) {
     console.log(err);
-    const error = new HttpError("Signing up fild, please try again.", 500);
+    const error = new HttpError(
+      "Signing up fild, please try again save user.",
+      500
+    );
     return next(error);
   }
 
@@ -135,15 +137,18 @@ const signup = async (req, res, next) => {
       }
     );
   } catch (err) {
-    return next(new HttpError("Signing up fild, please try again.", 500));
+    return next(new HttpError("Signing up fild, please try again token.", 500));
   }
 
-  await transport.sendMail({
-    from: '"ASK Platform" <no-reply@Ahmad-Alhraki.com>',
-    to: email,
-    subject: "🎉 Welcome to ASK Platform!",
-    text: `Hello ${name}, welcome to ASK Platform! We're thrilled to have you on board.`,
-    html: `
+  console.log("Sending email to:", email);
+
+  try {
+    const info = await transport.sendMail({
+      from: '"ASK Platform" <no-reply@Ahmad-Alhraki.com>',
+      to: email,
+      subject: "🎉 Welcome to ASK Platform!",
+      text: `Hello ${name}, welcome to ASK Platform! We're thrilled to have you on board.`,
+      html: `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #f9f9f9;">
       <h2 style="color: #2c3e50;">👋 Welcome to <span style="color: #4CAF50;">ASK Platform</span>, ${name}!</h2>
       <p style="font-size: 16px; color: #333;">
@@ -152,7 +157,7 @@ const signup = async (req, res, next) => {
       <p style="font-size: 16px; color: #333;">
         If you ever need help, don’t hesitate to reach out. We're here for you!
       </p>
-      <a href="https://ask.ahmad-alhraki.com" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">
+      <a href="https://ask-ui-ahmads-projects-2fed5bb7.vercel.app/home" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">
         👉 Explore the Platform
       </a>
       <p style="margin-top: 30px; font-size: 14px; color: #999;">
@@ -160,7 +165,12 @@ const signup = async (req, res, next) => {
       </p>
     </div>
   `,
-  });
+    });
+    console.log("✅ Email sent successfully!");
+    console.log("Message ID:", info.messageId);
+  } catch (err) {
+    console.error("❌ Failed to send email:", err.message);
+  }
 
   return res
     .status(201)
